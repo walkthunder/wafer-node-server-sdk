@@ -1,151 +1,182 @@
+# Hacked by walkthunder
+## www.zhengpenghui.com
+
 # Wafer 服务端 SDK - Node.js
 
-[![NPM Version][npm-image]][npm-url]
-[![Minimum Node.js Version][nodejs-image]][nodejs-url]
-[![Build Status][travis-image]][travis-url]
-[![Coverage Status][coveralls-image]][coveralls-url]
-[![License][license-image]][license-url]
+## 介绍
 
-本项目是 [Wafer](https://github.com/tencentyun/wafer) 组成部分，以 SDK 的形式为业务服务器提供以下服务：
+Wafer 服务端 SDK 是腾讯云为微信小程序开发者提供的快速开发库，SDK 封装了以下功能供小程序开发者快速调用：
 
-+ [会话服务](https://github.com/tencentyun/wafer/wiki/会话服务)
-+ [信道服务](https://github.com/tencentyun/wafer/wiki/信道服务)
+- 用户登录与验证
+- 信道服务
+- 图片上传
+- 数据库
+- 客服消息
+
+开发者只需要根据文档对 SDK 进行初始化配置，就可以获得以上能力。你还可以直接到[腾讯云小程序控制台](https://console.qcloud.com/la)购买小程序解决方案，可以得到运行本示例所需的资源和服务，其中包括已部署好的相关程序、示例代码及自动下发的 SDK 配置文件 `/etc/qcloud/sdk.config`。
 
 ## 安装
 
-```sh
-npm install qcloud-weapp-server-sdk --save
+```bash
+npm install wafer-node-sdk --save
 ```
 
-## API
+## 配置
 
-参见 [API 文档](./API.md)
-
-## 使用
-
-### 初始化 SDK 配置项
-
-```js
-const qcloud = require('qcloud-weapp-server-sdk');
-
-qcloud.config({
-    ServerHost: '业务服务器的主机名',
-    AuthServerUrl: '鉴权服务器地址',
-    TunnelServerUrl: '信道服务器地址',
-    TunnelSignatureKey: '和信道服务器通信的签名密钥',
-});
-```
-
-### 使用会话服务
-
-#### 处理用户登录请求
-
-业务服务器提供一个路由（如 `/login`）处理客户端的登录请求，直接使用 SDK 的 [LoginService::login()](https://github.com/tencentyun/wafer-node-server-sdk/blob/master/API.md#loginservicelogincallback) 方法即可完成登录处理。登录成功后，可以获取用户信息。
-
-
-```js
-const express = require('express');
-const LoginService = require('qcloud-weapp-server-sdk').LoginService;
-const app = express();
-
-app.get('/login', (req, res) => {
-    const loginService = new LoginService(req, res);
-
-    loginService.login().then(result => {
-        console.log('微信用户信息', result.userInfo);
-    });
-});
-
-app.listen(80);
-```
-
-#### 检查请求登录态
-
-客户端交给业务服务器的请求，业务服务器可以通过 SDK 的 [LoginService::check()](https://github.com/tencentyun/wafer-node-server-sdk/blob/master/API.md#loginservicecheckcallback) 方法来检查该请求是否包含合法的会话。如果包含，则会返回会话对应的用户信息。
-
-```js
-const express = require('express');
-const LoginService = require('qcloud-weapp-server-sdk').LoginService;
-const app = express();
-
-// 获取用户信息
-app.get('/user', (req, res) => {
-    const loginService = new LoginService(req, res);
-
-    loginService.check().then(result => {
-        res.json({
-            'code': 0,
-            'message': 'ok',
-            'data': {
-                'userInfo': result.userInfo,
-            },
-        });
-    });
-});
-
-app.listen(80);
-```
-
-阅读 Wafer Wiki 文档中的[会话服务](https://github.com/tencentyun/wafer/wiki/%E4%BC%9A%E8%AF%9D%E6%9C%8D%E5%8A%A1)了解更多关于会话服务的技术资料。
-
-### 使用信道服务
-
-业务在一个路由上（如 `/tunnel`）提供信道服务，只需把该路由上的请求都交给 SDK 的信道服务处理即可。
-
-```js
-const express = require('express');
-const bodyParser = require('body-parser');
-const TunnelService = require('qcloud-weapp-server-sdk').TunnelService;
-const app = express();
-
-class TunnelHandler {
-    // TODO: 处理 onRequest 事件，
-    onRequest(tunnelId, userInfo) {}
-
-    // TODO: 处理 onConnect 事件
-    onConnect(tunnelId) {}
-
-    // TODO: 处理 onMessage 事件
-    onMessage(tunnelId, type, content) {}
-
-    // TODO: 处理 onClose 事件
-    onClose(tunnelId) {}
+```javascript
+const configs = {
+  appId: 'wx00dd00dd00dd00dd',
+  appSecret: 'abcdefghijkl',
+  useQcloudLogin: false,
+  cos: {
+    region: 'cn-south',
+    fileBucket: 'test',
+    uploadFolder: ''
+  },
+  serverHost: '1234567.qcloud.la',
+  tunnelServerUrl: '1234567.ws.qcloud.la',
+  tunnelSignatureKey: 'abcdefghijkl',
+  qcloudAppId: '121000000',
+  qcloudSecretId: 'ABCDEFG',
+  qcloudSecretKey: 'abcdefghijkl',
+  wxMessageToken: 'abcdefghijkl'
 }
-
-// parse `application/json`
-app.use(bodyParser.json());
-
-// 处理信道请求
-// 信道需同时处理 `GET` 和 `POST` 请求，为了方便这里使用 `all` 方法
-app.all('/tunnel', (req, res) => {
-    const tunnelService = new TunnelService(req, res);
-    const handler = new TunnelHandler();
-
-    tunnelService.handle(handler, { 'checkLogin': true });
-});
-
-app.listen(80);
+const qcloud = require('qcloud-weapp-server-sdk')(configs)
 ```
 
-使用信道服务需要实现处理器，来获取处理信道的各种事件，具体可参考配套 Demo 中的 [ChatTunnelHandler](https://github.com/tencentyun/wafer-node-server-demo/blob/master/business/chat-tunnel-handler.js) 的实现。
+具体配置项说明请查看：[API 文档](/API.md)。
 
-阅读 Wafer Wiki 中的[信道服务](https://github.com/tencentyun/wafer/wiki/%E4%BF%A1%E9%81%93%E6%9C%8D%E5%8A%A1)了解更多解决方案中关于信道服务的技术资料。
+## API 文档
 
-### 详细示例
+具体查看 [API 文档](/API.md)。
 
-参见项目：[Wafer 服务端 DEMO - Node.js](https://github.com/tencentyun/wafer-node-server-demo)
+## 基本功能
 
-## LICENSE
+#### 用户登录与验证
 
-[MIT](LICENSE)
+用户登录使用 `authorization` 接口：
 
-[npm-image]: https://img.shields.io/npm/v/qcloud-weapp-server-sdk.svg
-[npm-url]: https://npmjs.org/package/qcloud-weapp-server-sdk
-[nodejs-image]: https://img.shields.io/badge/Node.js-%3E%3D%204.0-669B64.svg
-[nodejs-url]: https://nodejs.org/
-[travis-image]: https://travis-ci.org/tencentyun/wafer-node-server-sdk.svg?branch=master
-[travis-url]: https://travis-ci.org/tencentyun/wafer-node-server-sdk
-[coveralls-image]: https://coveralls.io/repos/github/tencentyun/wafer-node-server-sdk/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/tencentyun/wafer-node-server-sdk?branch=master
-[license-image]: https://img.shields.io/github/license/tencentyun/wafer-node-server-sdk.svg
-[license-url]: LICENSE
+```javascript
+const { auth: { authorization } } = qcloud
+
+// express
+module.exports = (req, res) => {
+  authorization(req).then(result => {
+    // result : {
+    //   loginState: 0  // 1表示登录成功，0表示登录失败
+    //   userinfo: { // 用户信息.. }
+    // }
+  })
+}
+```
+
+用户登录态校验使用 `validation` 接口：
+
+```javascript
+const { auth: { validation } } = qcloud
+
+// express
+module.exports = (req, res) => {
+  validation(req).then(result => {
+    // result : {
+    //   loginState: 0  // 1表示登录成功，0表示登录失败
+    //   userinfo: { // 用户信息.. }
+    // }
+  })
+}
+```
+
+如果你使用 Koa 框架，则可以直接使用 SDK 导出的 `koaAuthorization` 和 `koaValidation` 中间件，登录信息将会被写进 `ctx.state.$wxInfo`：
+
+```javascript
+const { auth: { authorizationMiddleware, validationMiddleware } } = qcloud
+
+// 颁发登录态
+router.get('/login', authorizationMiddleware, ctx => {
+  console.log(ctx.state.$wxInfo)
+  // {
+  //   loginState: 0  // 1表示登录成功，0表示登录失败
+  //   userinfo: { // 用户信息.. }
+  // }
+})
+
+// 校验登录态
+router.get('/user', validationMiddleware, ctx => {
+  console.log(ctx.state.$wxInfo)
+  // {
+  //   loginState: 0  // 1表示登录成功，0表示登录失败
+  //   userinfo: { // 用户信息.. }
+  // }
+})
+```
+
+#### 信道服务
+
+业务在一个路由上（如 `/tunnel`）提供信道服务，只需把该路由上的请求都交给 SDK 的信道服务处理即可。使用信道服务需要实现处理器，来获取处理信道的各种事件，具体可参考配套 Demo 中的 tunnel.js 的实现。
+
+#### 图片上传
+
+SDK 提供直接上传图片至腾讯云对象储存（COS）的接口，只需要将请求传入接口，即可自动上传文件到 COS 中，并返回数据：
+
+```javascript
+const { uploader } = qcloud
+
+module.exports = async ctx => {
+  await uploader(ctx.req).then(data => {
+    console.log(data)
+    // {
+    //   imgUrl: 'http://test-121000000.cosgz.myqcloud.com/abcdef.jpg',
+    //   size: 1024,
+    //   mimeType: 'image/jpeg',
+    //   name: 'abcdef.jpg'
+    // }
+  })
+}
+```
+
+#### 数据库
+
+SDK 还暴露出了内部使用的 MySQL 连接，由于 SDK 内部使用 [Knex.js](http://knexjs.org/) 连接数据库，SDK 暴露的 MySQL 实例就是 Knex.js 连接实例，具体使用方法可以查看 [Knex.js 文档](http://knexjs.org/)：
+
+```javascript
+const { mysql } = qcloud
+
+mysql('db_name').select('*').where({ id: 1 })
+// => { id:1, name: 'leo', age: 20 }
+```
+
+#### 客服消息
+
+微信提供一个[客服消息](https://mp.weixin.qq.com/debug/wxadoc/dev/api/custommsg/callback_help.html)处理能力，你可以使用 SDK 提供的接口快速部署一个接受客服信息的 API：
+
+```javascript
+const { message: { checkSignature } } = require('../qcloud')
+
+/**
+ * 响应 GET 请求（响应微信配置时的签名检查请求）
+ */
+router.get('/message', ctx => {
+  const { signature, timestamp, nonce, echostr } = ctx.query
+  if (checkSignature(signature, timestamp, nonce)) ctx.body = echostr
+  else ctx.body = 'ERR_WHEN_CHECK_SIGNATURE'
+})
+
+// post 请求用来接收消息
+router.post('/message', (ctx, next) {
+    // 检查签名，确认是微信发出的请求
+    const { signature, timestamp, nonce } = ctx.query
+    if (!checkSignature(signature, timestamp, nonce)) ctx.body = 'ERR_WHEN_CHECK_SIGNATURE'
+
+    /**
+     * 解析微信发送过来的请求体
+     * 可查看微信文档：https://mp.weixin.qq.com/debug/wxadoc/dev/api/custommsg/receive.html#接收消息和事件
+     */
+    const body = ctx.request.body
+
+    ctx.body = 'success'
+})
+```
+
+## 示例 Demo
+
+腾讯云还提供了完整的示例代码，点击[这里](https://github.com/tencentyun/wafer2-quickstart-nodejs)下载。
