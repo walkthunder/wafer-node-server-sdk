@@ -54,7 +54,7 @@
     "name": "CFETeam"
   },
   "bugs": {
-    "url": "https://github.com/tencentyun/wafer-node-server-sdk/issues"
+    "url": "https://github.com/walkthunder/wafer-node-server-sdk/issues"
   },
   "dependencies": {
     "axios": "^0.16.2",
@@ -94,7 +94,7 @@
     "node": ">=6.5.0"
   },
   "gitHead": "f4eddd4744e0724b68243f1b3f104930a845c6b7",
-  "homepage": "https://github.com/tencentyun/wafer-node-server-sdk#readme",
+  "homepage": "https://github.com/walkthunder/wafer-node-server-sdk#readme",
   "keywords": [
     "authentication",
     "login",
@@ -107,17 +107,17 @@
   "main": "index.js",
   "maintainers": [
     {
-      "name": "jas0ncn",
-      "email": "me@ijason.cc"
+      "name": "walkthunder",
+      "email": "walkthunder@163.com"
     }
   ],
-  "name": "wafer-node-sdk",
+  "name": "weapp-server-sdk",
   "optionalDependencies": {},
   "publish_time": 1522318166499,
   "readme": "ERROR: No README data found!",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tencentyun/wafer-node-server-sdk.git"
+    "url": "git+https://github.com/walkthunder/wafer-node-server-sdk.git"
   },
   "scripts": {
     "test": "mocha --reporter spec --ignore-leaks --bail --slow 1000 --recursive test"
